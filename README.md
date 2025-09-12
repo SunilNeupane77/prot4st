@@ -18,7 +18,7 @@ A secure communication and coordination platform for civil rights organizations 
 - **Backend**: Next.js API Routes
 - **Database**: MongoDB
 - **Security**: AES encryption, password hashing
-- **Authentication**: NextAuth.js (ready for implementation)
+- **Authentication**: NextAuth.jss
 
 ## Getting Started
 
