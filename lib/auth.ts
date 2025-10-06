@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { getServerSession } from 'next-auth'
-import { NextRequest } from 'next/server'
 import clientPromise from './mongodb'
 
 export async function hashPassword(password: string): Promise<string> {
@@ -11,7 +11,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash)
 }
 
-export async function getCurrentUser(request?: NextRequest) {
+export function generateToken(userId: string): string {
+  return jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '7d' })
+}
+
+export async function getCurrentUser() {
   const session = await getServerSession()
   if (!session?.user?.email) return null
 

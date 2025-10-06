@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       message: 'Event created',
       eventId: result.insertedId 
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create event' }, { status: 500 })
   }
 }
@@ -54,7 +54,7 @@ export async function GET() {
       .toArray()
     
     return NextResponse.json({ events })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })
   }
 }

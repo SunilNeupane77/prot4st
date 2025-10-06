@@ -6,6 +6,7 @@ interface FactCheckResult {
   reasoning: string[]
 }
 
+/*
 interface ClaimData {
   text: string
   keywords: string[]
@@ -14,6 +15,7 @@ interface ClaimData {
   reportCount: number
   verificationVotes: { userId: string; vote: 'true' | 'false'; timestamp: Date }[]
 }
+*/
 
 export class FactCheckAlgorithm {
   private knownFacts: Map<string, FactCheckResult> = new Map()
@@ -23,8 +25,8 @@ export class FactCheckAlgorithm {
   ]
 
   async checkClaim(claim: string, sources: string[] = []): Promise<FactCheckResult> {
-    const keywords = this.extractKeywords(claim)
-    const suspiciousScore = this.calculateSuspiciousScore(claim, keywords)
+    // Extract keywords but use them in the suspicious score calculation
+    const suspiciousScore = this.calculateSuspiciousScore(claim, this.extractKeywords(claim))
     const sourceReliability = this.assessSourceReliability(sources)
     const communityScore = await this.getCommunityVerificationScore(claim)
     
@@ -53,6 +55,13 @@ export class FactCheckAlgorithm {
   private calculateSuspiciousScore(claim: string, keywords: string[]): number {
     let suspiciousCount = 0
     const lowerClaim = claim.toLowerCase()
+    
+    // Use keywords to enhance the suspicious score detection
+    const keywordMatch = keywords.some(word => 
+      this.suspiciousKeywords.some(suspicious => suspicious.includes(word))
+    );
+    
+    if (keywordMatch) suspiciousCount++;
     
     this.suspiciousKeywords.forEach(keyword => {
       if (lowerClaim.includes(keyword)) {
@@ -156,8 +165,7 @@ export class FactCheckAlgorithm {
   async submitCommunityVerification(
     claim: string,
     userId: string,
-    vote: 'true' | 'false',
-    evidence?: string
+    vote: 'true' | 'false'
   ): Promise<void> {
     // Implementation would store community verification in database
     console.log(`User ${userId} voted ${vote} for claim: ${claim}`)

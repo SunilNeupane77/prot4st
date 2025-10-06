@@ -42,7 +42,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }: Cr
         const data = await response.json()
         setError(data.error || 'Failed to create event')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to create event')
     }
     setLoading(false)

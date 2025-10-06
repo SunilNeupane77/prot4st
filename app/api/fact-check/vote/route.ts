@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+// import { ObjectId } from 'mongodb'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: 'Vote recorded successfully' })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to record vote' }, { status: 500 })
   }
 }

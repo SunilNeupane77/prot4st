@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     ]).toArray()
 
     return NextResponse.json({ contacts: messageContacts })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 })
   }
 }

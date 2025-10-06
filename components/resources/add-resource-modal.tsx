@@ -45,7 +45,7 @@ export default function AddResourceModal({ isOpen, onClose, onResourceAdded }: A
         const data = await response.json()
         setError(data.error || 'Failed to add resource')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to add resource')
     }
     setLoading(false)

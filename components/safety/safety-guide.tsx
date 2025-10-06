@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Shield, AlertTriangle, Phone, MapPin, Users, Eye, Heart, Scale, Edit, Plus, Trash2 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { AlertTriangle, Edit, Heart, MapPin, Phone, Plus, Scale, Shield, Trash2, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface SafetyTip {
   id: string
@@ -41,7 +40,7 @@ export default function SafetyGuide() {
   })
   const [isEditing, setIsEditing] = useState(false)
   const [userRole, setUserRole] = useState('participant')
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
 
   useEffect(() => {
     fetchSafetyData()

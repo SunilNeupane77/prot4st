@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Users, Calendar, MessageSquare, BarChart3, Settings, Bell } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { BarChart3, Bell, Calendar, MessageSquare, Settings, Users } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface Stats {
   totalGroups: number
@@ -14,17 +14,25 @@ interface Stats {
   activeChats: number
 }
 
+interface Activity {
+  _id: string
+  type: 'join' | 'message' | 'event' | 'resource'
+  user: {
+    username: string
+    firstName: string
+  }
+  description: string
+  timestamp: string
+  entityId?: string
+}
+
 export default function OrganizerDashboard() {
   const [stats, setStats] = useState<Stats>({ totalGroups: 0, totalEvents: 0, totalMembers: 0, activeChats: 0 })
-  const [recentActivity, setRecentActivity] = useState<any[]>([])
-  const { data: session } = useSession()
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([])
+  // Session data is available but not directly used in this component
+  useSession()
 
-  useEffect(() => {
-    fetchStats()
-    fetchRecentActivity()
-  }, [])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch('/api/organizer/stats')
       if (response.ok) {
@@ -34,9 +42,9 @@ export default function OrganizerDashboard() {
     } catch (error) {
       console.error('Failed to fetch stats:', error)
     }
-  }
+  }, [])
 
-  const fetchRecentActivity = async () => {
+  const fetchRecentActivity = useCallback(async () => {
     try {
       const response = await fetch('/api/organizer/activity')
       if (response.ok) {
@@ -46,7 +54,12 @@ export default function OrganizerDashboard() {
     } catch (error) {
       console.error('Failed to fetch activity:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchStats()
+    fetchRecentActivity()
+  }, [fetchStats, fetchRecentActivity])
 
   const sendBroadcast = async () => {
     // Implementation for sending broadcast messages

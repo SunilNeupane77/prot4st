@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
-import { ObjectId } from 'mongodb'
+// import { ObjectId } from 'mongodb'
 
 export async function GET() {
   try {
@@ -22,7 +22,7 @@ export async function GET() {
     }
     
     return NextResponse.json(safetyData)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch safety info' }, { status: 500 })
   }
 }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     )
     
     return NextResponse.json({ message: 'Safety info updated successfully' })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update safety info' }, { status: 500 })
   }
 }

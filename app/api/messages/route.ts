@@ -1,8 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { decrypt, encrypt } from '@/lib/encryption'
 import clientPromise from '@/lib/mongodb'
-import { encrypt, decrypt } from '@/lib/encryption'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth/next'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
+// Create a message input schema for validation
+const messageInputSchema = z.object({
+  groupId: z.string(),
+  content: z.string(),
+  type: z.enum(['text', 'image', 'location', 'alert', 'file']).default('text'),
+  metadata: z.object({
+    fileName: z.string().optional(),
+    fileSize: z.number().optional(),
+    coordinates: z.object({
+      lat: z.number(),
+      lng: z.number()
+    }).optional(),
+    alertLevel: z.enum(['low', 'medium', 'high', 'critical']).optional()
+  }).optional()
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +28,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { groupId, content, type = 'text', metadata } = await request.json()
+    const inputData = await request.json()
+    
+    // Validate input data
+    const validationResult = messageInputSchema.safeParse(inputData)
+    if (!validationResult.success) {
+      return NextResponse.json({ 
+        error: 'Validation error', 
+        details: validationResult.error.format() 
+      }, { status: 400 })
+    }
+    
+    const data = validationResult.data
+    const { groupId, content, type, metadata } = data
     
     const client = await clientPromise
     const db = client.db('protest-org')
@@ -61,7 +90,7 @@ export async function POST(request: NextRequest) {
       message: 'Message sent',
       messageId: result.insertedId 
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
 }
@@ -100,7 +129,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
     
-    const query: any = { groupId: new ObjectId(groupId) }
+    const query: Record<string, unknown> = { groupId: new ObjectId(groupId) }
     if (before) {
       query.timestamp = { $lt: new Date(before) }
     }
@@ -144,7 +173,7 @@ export async function GET(request: NextRequest) {
     )
     
     return NextResponse.json({ messages: decryptedMessages.reverse() })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
   }
 }

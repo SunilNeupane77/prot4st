@@ -8,6 +8,7 @@ declare module 'next-auth' {
       name?: string
       username?: string
       role?: string
+      needsRoleSelection?: boolean
     }
   }
 
@@ -17,5 +18,6 @@ declare module 'next-auth' {
     name?: string
     username?: string
     role?: string
+    needsRoleSelection?: boolean
   }
 }

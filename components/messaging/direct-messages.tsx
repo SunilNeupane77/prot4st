@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { MessageSquare, Send, Users, Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { MessageSquare, Search, Send, Users } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
 
 interface DirectMessage {
   _id: string
@@ -107,10 +107,10 @@ export default function DirectMessages() {
       if (response.ok) {
         const data = await response.json()
         // Add search results to contacts if not already present
-        const newContacts = data.users.filter((user: any) => 
+        const newContacts = data.users.filter((user: Contact) => 
           !contacts.find(contact => contact._id === user._id)
         )
-        setContacts(prev => [...prev, ...newContacts.map((user: any) => ({
+        setContacts(prev => [...prev, ...newContacts.map((user: Contact) => ({
           ...user,
           unreadCount: 0
         }))])

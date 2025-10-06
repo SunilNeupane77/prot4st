@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Phone, Shield, Heart, Scale, Home, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Heart, Home, MapPin, Phone, Plus, Scale, Shield } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import AddResourceModal from './add-resource-modal'
 
 interface Resource {
@@ -37,7 +37,7 @@ export default function ResourceMap() {
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
 
-  const fetchResources = async () => {
+  const fetchResources = useCallback(async () => {
     try {
       const url = selectedType === 'all' 
         ? '/api/resources' 
@@ -51,11 +51,11 @@ export default function ResourceMap() {
       console.error('Failed to fetch resources:', error)
     }
     setLoading(false)
-  }
+  }, [selectedType]);
 
   useEffect(() => {
     fetchResources()
-  }, [selectedType])
+  }, [fetchResources])
 
   const handleResourceAdded = () => {
     fetchResources()

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { generateToken, verifyPassword } from '@/lib/auth'
 import clientPromise from '@/lib/mongodb'
-import { verifyPassword, generateToken } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     })
     
     return response
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }

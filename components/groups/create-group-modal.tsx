@@ -44,7 +44,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }: Cr
         const data = await response.json()
         setError(data.error || 'Failed to create group')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to create group')
     }
     setLoading(false)

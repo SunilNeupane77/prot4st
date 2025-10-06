@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Users, Plus, Lock, Globe } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Globe, Lock, Plus, Users } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useCallback, useEffect, useState } from 'react'
 import CreateGroupModal from './create-group-modal'
 
 interface Group {
@@ -29,7 +29,7 @@ export default function GroupSelector({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const { data: session } = useSession()
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     if (!session?.user) return
     
     try {
@@ -46,11 +46,11 @@ export default function GroupSelector({
       console.error('Failed to fetch groups:', error)
     }
     setLoading(false)
-  }
+  }, [session, selectedGroupId, onGroupSelect])
 
   useEffect(() => {
     fetchGroups()
-  }, [session])
+  }, [session, fetchGroups])
 
   const handleGroupCreated = () => {
     fetchGroups()

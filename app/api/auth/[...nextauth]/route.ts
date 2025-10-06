@@ -1,16 +1,14 @@
 import { verifyPassword } from '@/lib/auth'
 import clientPromise from '@/lib/mongodb'
-import { MongoDBAdapter } from '@next-auth/mongodb-adapter'
-import NextAuth from 'next-auth'
+import NextAuth, { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import FacebookProvider from 'next-auth/providers/facebook'
+import GoogleProvider from 'next-auth/providers/google'
 
-const handler = NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
+export const authOptions: NextAuthOptions = {
   providers: [
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
       name: 'credentials',
@@ -18,73 +16,109 @@ const handler = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials) {
+      async authorize(credentials: Record<string, string> | undefined) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const client = await clientPromise
-        const db = client.db('protest-org')
-        
-        const user = await db.collection('users').findOne({ email: credentials.email })
-        if (!user) return null
+        try {
+          const client = await clientPromise
+          const db = client.db('protest-org')
+          
+          const user = await db.collection('users').findOne({ email: credentials.email })
+          if (!user) return null
 
-        const isValid = await verifyPassword(credentials.password, user.password)
-        if (!isValid) return null
+          const isValid = await verifyPassword(credentials.password, user.password)
+          if (!isValid) return null
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.username,
-          role: user.role
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.username,
+            role: user.role
+          }
+        } catch (err) {
+          console.error('Auth error:', err)
+          return null
         }
       }
     })
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === 'facebook') {
-        const client = await clientPromise
-        const db = client.db('protest-org')
-        
-        const existingUser = await db.collection('users').findOne({ email: user.email })
-        
-        if (!existingUser) {
-          await db.collection('users').insertOne({
-            username: user.name?.replace(/\s+/g, '').toLowerCase() || 'user',
-            email: user.email,
-            password: '', // No password for OAuth users
-            role: 'participant',
-            verified: true,
-            profile: {
-              firstName: profile?.name?.split(' ')[0] || '',
-              lastName: profile?.name?.split(' ').slice(1).join(' ') || '',
-              phone: '',
-              location: '',
-              bio: ''
-            },
-            security: {
-              twoFactorEnabled: false,
-              lastLogin: new Date(),
-              loginAttempts: 0
-            },
-            groups: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            facebookId: account.providerAccountId
-          })
+      if (account?.provider === 'google') {
+        try {
+          const client = await clientPromise
+          const db = client.db('protest-org')
+          
+          const existingUser = await db.collection('users').findOne({ email: user.email })
+          
+          if (!existingUser) {
+            // Create new user
+            const newUser = {
+              username: user.name?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`,
+              email: user.email,
+              password: '',
+              role: 'participant',
+              verified: true,
+              profile: {
+                firstName: (profile as Record<string, unknown>)?.given_name as string || '',
+                lastName: (profile as Record<string, unknown>)?.family_name as string || '',
+                displayName: user.name || '',
+                avatar: user.image || '',
+                phone: '',
+                bio: '',
+                skills: [],
+                languages: [],
+                location: { address: '', city: '', state: '', country: '' },
+                emergencyContact: { name: '', phone: '', relationship: '' },
+                preferences: {
+                  notifications: { email: true, sms: false, push: true, emergencyAlerts: true },
+                  privacy: { profileVisibility: 'members', locationSharing: false, contactSharing: false },
+                  communication: { language: 'en', timezone: 'UTC' }
+                }
+              },
+              security: { twoFactorEnabled: false, lastLogin: new Date(), loginAttempts: 0 },
+              groups: [],
+              events: [],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              status: 'active',
+              needsRoleSelection: true
+            }
+            
+            await db.collection('users').insertOne(newUser)
+            user.needsRoleSelection = true
+            user.role = 'participant'
+          } else {
+            user.role = existingUser.role
+            user.needsRoleSelection = existingUser.needsRoleSelection || false
+          }
+        } catch (err) {
+          console.error('Google sign-in error:', err)
+          return false
         }
       }
       return true
     },
-    async session({ session, token }) {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return `${baseUrl}/dashboard`
+    },
+    async session({ session }) {
       if (session.user?.email) {
-        const client = await clientPromise
-        const db = client.db('protest-org')
-        
-        const user = await db.collection('users').findOne({ email: session.user.email })
-        if (user) {
-          session.user.id = user._id.toString()
-          session.user.role = user.role
-          session.user.username = user.username
+        try {
+          const client = await clientPromise
+          const db = client.db('protest-org')
+          
+          const user = await db.collection('users').findOne({ email: session.user.email })
+          if (user) {
+            session.user.id = user._id.toString()
+            session.user.role = user.role
+            session.user.username = user.username
+            session.user.needsRoleSelection = user.needsRoleSelection || false
+          }
+        } catch (err) {
+          console.error('Session callback error:', err)
         }
       }
       return session
@@ -94,7 +128,10 @@ const handler = NextAuth({
     signIn: '/auth',
     error: '/auth'
   },
-  session: { strategy: 'jwt' }
-})
+  session: { strategy: 'jwt' },
+  debug: process.env.NODE_ENV === 'development'
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

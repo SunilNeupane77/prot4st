@@ -1,16 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Bell, BookOpen, Heart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Bell, BookOpen, Calendar, Heart, MapPin, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface UserStats {
   joinedGroups: number
   attendingEvents: number
   messagesCount: number
   resourcesAdded: number
+}
+
+interface Event {
+  _id: string
+  title: string
+  date: string
+  location: string
+  attendees: string[]
+  description: string
+}
+
+interface Notification {
+  _id: string
+  title: string
+  message: string
+  type: string
+  read: boolean
+  createdAt: string
 }
 
 export default function ParticipantDashboard() {
@@ -20,8 +38,8 @@ export default function ParticipantDashboard() {
     messagesCount: 0, 
     resourcesAdded: 0 
   })
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   useEffect(() => {
     fetchUserStats()

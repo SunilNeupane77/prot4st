@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,12 +50,12 @@ export async function POST(request: NextRequest) {
       message: 'Group created',
       groupId: result.insertedId 
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create group' }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       .toArray()
     
     return NextResponse.json({ groups })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch groups' }, { status: 500 })
   }
 }

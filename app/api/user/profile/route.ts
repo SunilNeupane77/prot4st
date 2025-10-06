@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         verified: user.verified
       }
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
   }
 }

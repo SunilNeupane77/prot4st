@@ -23,7 +23,7 @@ export function useAuth() {
     await signIn('facebook', { callbackUrl: '/dashboard' })
   }
 
-  const register = async (userData: any): Promise<boolean> => {
+  const register = async (userData: Record<string, unknown>): Promise<boolean> => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -51,7 +51,8 @@ export function useAuth() {
       id: session.user.id,
       username: session.user.username || session.user.name,
       email: session.user.email,
-      role: session.user.role
+      role: session.user.role,
+      needsRoleSelection: session.user.needsRoleSelection ?? false
     } : null,
     login,
     loginWithFacebook,

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import clientPromise from '@/lib/mongodb'
 import { encrypt } from '@/lib/encryption'
+import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
       message: 'Message sent',
       messageId: result.insertedId 
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ messages: messages.reverse() })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
   }
 }

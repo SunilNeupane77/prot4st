@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
@@ -28,6 +28,20 @@ export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  const fetchUserRole = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const data = await response.json()
+        setUserRole(data.user?.role || 'participant')
+      }
+    } catch {
+      console.error('Failed to fetch user role')
+      // Set a default value in case of error
+      setUserRole('participant')
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
@@ -35,21 +49,28 @@ export default function Dashboard() {
       return
     }
     
+    // Check if user needs role selection using proper type safety
+    // Using the custom User type defined in next-auth.d.ts
+    const customSession = session as { 
+      user?: { 
+        needsRoleSelection?: boolean;
+        role?: string;
+      } & typeof session.user 
+    };
+    
+    if (customSession.user?.needsRoleSelection === true) {
+      router.push('/auth/role-selection')
+      return
+    }
+    
+    // Set initial role from session if available
+    if (customSession.user?.role) {
+      setUserRole(customSession.user.role);
+    }
+    
     // Fetch user role from database
     fetchUserRole()
-  }, [session, status, router])
-
-  const fetchUserRole = async () => {
-    try {
-      const response = await fetch('/api/user/profile')
-      if (response.ok) {
-        const data = await response.json()
-        setUserRole(data.user?.role || 'participant')
-      }
-    } catch (error) {
-      console.error('Failed to fetch user role:', error)
-    }
-  }
+  }, [session, status, router, fetchUserRole])
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/' })

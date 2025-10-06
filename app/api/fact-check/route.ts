@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import clientPromise from '@/lib/mongodb'
 import { FactCheckAlgorithm } from '@/lib/fact-check-algorithm'
+import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
       id: insertResult.insertedId,
       ...result
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Fact check failed' }, { status: 500 })
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       .toArray()
 
     return NextResponse.json({ factChecks })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch fact checks' }, { status: 500 })
   }
 }

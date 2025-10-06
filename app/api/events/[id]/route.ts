@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth'
 import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession()
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -18,7 +19,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const event = await db.collection('events').findOne({ _id: new ObjectId(params.id) })
+    const event = await db.collection('events').findOne({ _id: new ObjectId(id) })
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
@@ -27,10 +28,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Not authorized to delete this event' }, { status: 403 })
     }
 
-    await db.collection('events').deleteOne({ _id: new ObjectId(params.id) })
+    await db.collection('events').deleteOne({ _id: new ObjectId(id) })
     
     return NextResponse.json({ message: 'Event deleted successfully' })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 })
   }
 }

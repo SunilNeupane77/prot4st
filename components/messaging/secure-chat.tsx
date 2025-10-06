@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import { Shield, Send, MoreVertical } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { MoreVertical, Send, Shield } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface Message {
   _id: string
@@ -58,7 +58,7 @@ export default function SecureChat({ groupId }: { groupId: string }) {
     setLoading(false)
   }
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!session?.user) return
     
     try {
@@ -70,7 +70,7 @@ export default function SecureChat({ groupId }: { groupId: string }) {
     } catch (error) {
       console.error('Failed to fetch messages:', error)
     }
-  }
+  }, [session, groupId])
 
   useEffect(() => {
     if (session?.user && groupId) {
@@ -78,7 +78,7 @@ export default function SecureChat({ groupId }: { groupId: string }) {
       const interval = setInterval(fetchMessages, 3000)
       return () => clearInterval(interval)
     }
-  }, [groupId, session])
+  }, [groupId, session, fetchMessages])
 
   if (!session?.user) {
     return (
